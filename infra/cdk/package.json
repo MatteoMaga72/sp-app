@@ -1,0 +1,17 @@
+{
+  "name": "sp-app-infra",
+  "version": "1.0.0",
+  "bin": { "app": "bin/app.js" },
+  "scripts": {
+    "build": "tsc",
+    "cdk": "cdk"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.170.0",
+    "constructs": "^10.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "typescript": "^5"
+  }
+}

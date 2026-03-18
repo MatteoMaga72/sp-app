@@ -1,0 +1,333 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                   String    @id @default(uuid())
+  fullName             String    @map("full_name")
+  email                String    @unique
+  phone                String?
+  avatarInitials       String?   @map("avatar_initials")
+  rewardPoints         Int       @default(0) @map("reward_points")
+  darkMode             Boolean   @default(false) @map("dark_mode")
+  notificationsEnabled Boolean   @default(true) @map("notifications_enabled")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+
+  premiseMembers PremiseMember[]
+  greenupProfile GreenupProfile?
+  userChallenges UserChallenge[]
+  userRewards    UserReward[]
+  applications   Application[]
+  notifications  Notification[]
+  giroAccounts   GiroAccount[]
+
+  @@map("users")
+}
+
+model Premise {
+  id             String    @id @default(uuid())
+  addressLine1   String    @map("address_line1")
+  addressLine2   String?   @map("address_line2")
+  postalCode     String?   @map("postal_code")
+  district       String?
+  propertyType   String?   @map("property_type")
+  hasElectricity Boolean   @default(true) @map("has_electricity")
+  hasWater       Boolean   @default(true) @map("has_water")
+  hasGas         Boolean   @default(true) @map("has_gas")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  members      PremiseMember[]
+  consumption  ConsumptionReading[]
+  bills        Bill[]
+  appliances   Appliance[]
+  greenGoals   GreenGoal[]
+  applications Application[]
+  giroAccounts GiroAccount[]
+  transactions Transaction[]
+
+  @@map("premises")
+}
+
+model PremiseMember {
+  id        String   @id @default(uuid())
+  premiseId String   @map("premise_id")
+  userId    String   @map("user_id")
+  role      String   @default("member")
+  initials  String?
+  joinedAt  DateTime @default(now()) @map("joined_at")
+
+  premise Premise @relation(fields: [premiseId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([premiseId, userId])
+  @@map("premise_members")
+}
+
+model ConsumptionReading {
+  id           String   @id @default(uuid())
+  premiseId    String   @map("premise_id")
+  utilityType  String   @map("utility_type")
+  readingValue Decimal  @map("reading_value") @db.Decimal(12, 4)
+  periodType   String   @map("period_type")
+  periodStart  DateTime @map("period_start")
+  periodEnd    DateTime @map("period_end")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  premise Premise @relation(fields: [premiseId], references: [id], onDelete: Cascade)
+
+  @@index([premiseId, utilityType])
+  @@index([periodType])
+  @@map("consumption_readings")
+}
+
+model Bill {
+  id          String   @id @default(uuid())
+  premiseId   String   @map("premise_id")
+  billMonth   DateTime @map("bill_month")
+  totalAmount Decimal  @map("total_amount") @db.Decimal(10, 2)
+  status      String   @default("unpaid")
+  dueDate     DateTime? @map("due_date")
+  pdfUrl      String?  @map("pdf_url")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  premise      Premise        @relation(fields: [premiseId], references: [id], onDelete: Cascade)
+  lineItems    BillLineItem[]
+  transactions Transaction[]
+
+  @@index([premiseId])
+  @@index([billMonth])
+  @@map("bills")
+}
+
+model BillLineItem {
+  id         String  @id @default(uuid())
+  billId     String  @map("bill_id")
+  category   String
+  label      String
+  amount     Decimal @db.Decimal(10, 2)
+  detail     String?
+  percentage Decimal? @db.Decimal(5, 2)
+  sortOrder  Int     @default(0) @map("sort_order")
+
+  bill Bill @relation(fields: [billId], references: [id], onDelete: Cascade)
+
+  @@index([billId])
+  @@map("bill_line_items")
+}
+
+model Transaction {
+  id              String   @id @default(uuid())
+  premiseId       String   @map("premise_id")
+  billId          String?  @map("bill_id")
+  type            String
+  paymentMethod   String?  @map("payment_method")
+  amount          Decimal  @db.Decimal(10, 2)
+  label           String
+  status          String   @default("pending")
+  transactionDate DateTime @map("transaction_date")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  premise Premise @relation(fields: [premiseId], references: [id])
+  bill    Bill?   @relation(fields: [billId], references: [id])
+
+  @@index([premiseId])
+  @@index([transactionDate])
+  @@map("transactions")
+}
+
+model Appliance {
+  id        String  @id @default(uuid())
+  premiseId String  @map("premise_id")
+  name      String
+  emoji     String?
+  kwhPerDay Decimal @map("kwh_per_day") @db.Decimal(6, 2)
+  color     String?
+  glowColor String? @map("glow_color")
+  sortOrder Int     @default(0) @map("sort_order")
+
+  premise Premise @relation(fields: [premiseId], references: [id], onDelete: Cascade)
+
+  @@index([premiseId])
+  @@map("appliances")
+}
+
+model GreenGoal {
+  id                   String   @id @default(uuid())
+  premiseId            String   @map("premise_id")
+  utilityType          String   @map("utility_type")
+  targetReductionPct   Decimal  @map("target_reduction_pct") @db.Decimal(5, 2)
+  baselineYear         Int      @map("baseline_year")
+  targetYear           Int      @map("target_year")
+  currentReductionPct  Decimal? @map("current_reduction_pct") @db.Decimal(5, 2)
+  status               String   @default("on_track")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  premise Premise @relation(fields: [premiseId], references: [id])
+
+  @@map("green_goals")
+}
+
+model GreenupProfile {
+  id           String   @id @default(uuid())
+  userId       String   @unique @map("user_id")
+  levelName    String   @default("Seed") @map("level_name")
+  levelNumber  Int      @default(1) @map("level_number")
+  xpCurrent    Int      @default(0) @map("xp_current")
+  xpRequired   Int      @default(1000) @map("xp_required")
+  streakDays   Int      @default(0) @map("streak_days")
+  kwhSaved     Decimal  @default(0) @map("kwh_saved") @db.Decimal(10, 2)
+  districtRank Int      @default(0) @map("district_rank")
+  cycleEndDate DateTime? @map("cycle_end_date")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("greenup_profiles")
+}
+
+model Challenge {
+  id          String  @id @default(uuid())
+  title       String
+  description String?
+  xpReward    Int     @map("xp_reward")
+  difficulty  Int     @default(1)
+  category    String  @default("active")
+  daysLeft    Int?    @map("days_left")
+  totalSteps  Int     @default(1) @map("total_steps")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  userChallenges UserChallenge[]
+
+  @@map("challenges")
+}
+
+model UserChallenge {
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  challengeId String    @map("challenge_id")
+  progress    Int       @default(0)
+  completed   Boolean   @default(false)
+  completedAt DateTime? @map("completed_at")
+
+  user      User      @relation(fields: [userId], references: [id])
+  challenge Challenge @relation(fields: [challengeId], references: [id])
+
+  @@unique([userId, challengeId])
+  @@map("user_challenges")
+}
+
+model Reward {
+  id            String  @id @default(uuid())
+  title         String
+  merchant      String
+  color         String?
+  iconType      String? @map("icon_type")
+  requiredLevel String? @map("required_level")
+  isLocked      Boolean @default(false) @map("is_locked")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  userRewards UserReward[]
+
+  @@map("rewards")
+}
+
+model UserReward {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  rewardId  String    @map("reward_id")
+  status    String    @default("available")
+  claimedAt DateTime? @map("claimed_at")
+
+  user   User   @relation(fields: [userId], references: [id])
+  reward Reward @relation(fields: [rewardId], references: [id])
+
+  @@unique([userId, rewardId])
+  @@map("user_rewards")
+}
+
+model EVStation {
+  id            String   @id @default(uuid())
+  name          String
+  address       String
+  latitude      Decimal? @db.Decimal(10, 8)
+  longitude     Decimal? @db.Decimal(11, 8)
+  available     Int      @default(0)
+  total         Int
+  chargerTypes  String[] @map("charger_types")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@map("ev_stations")
+}
+
+model Application {
+  id                  String   @id @default(uuid())
+  userId              String   @map("user_id")
+  premiseId           String?  @map("premise_id")
+  type                String
+  status              String   @default("applied")
+  formData            Json?    @map("form_data")
+  submittedAt         DateTime @default(now()) @map("submitted_at")
+  estimatedCompletion DateTime? @map("estimated_completion")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  user    User     @relation(fields: [userId], references: [id])
+  premise Premise? @relation(fields: [premiseId], references: [id])
+
+  @@index([userId])
+  @@map("applications")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  title     String
+  body      String?
+  type      String?
+  isRead    Boolean  @default(false) @map("is_read")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+model GiroAccount {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  premiseId   String   @map("premise_id")
+  bankName    String   @map("bank_name")
+  accountMask String   @map("account_mask")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user    User    @relation(fields: [userId], references: [id])
+  premise Premise @relation(fields: [premiseId], references: [id])
+
+  @@map("giro_accounts")
+}
+
+model LeaderboardEntry {
+  id       String   @id @default(uuid())
+  rank     Int
+  name     String
+  points   Int
+  level    String
+  district String?
+  weekOf   DateTime @map("week_of")
+
+  @@index([weekOf])
+  @@map("leaderboard_entries")
+}
