@@ -1418,3 +1418,164 @@ The frontend pages currently use static/hardcoded data and do not make API calls
 - **Multi-stage build**: Only production artifacts are copied to the final stage.
 - **Non-root user**: Running as a non-root user is a security practice that also prevents accidental file permission issues.
 - **Health check startup period**: 60-second grace period allows the container to fully initialize before health checks begin failing.
+
+---
+
+## 10. Mobile App Technical Specifications
+
+### Project Setup
+
+The mobile app was bootstrapped with `npx create-expo-app` using the `blank-typescript` template. It uses Expo SDK 54 with React Native 0.79 and the managed workflow, meaning no native code ejection is required for building or development.
+
+### npm Dependencies
+
+Key dependencies installed in the mobile project:
+
+| Package | Purpose |
+|---------|---------|
+| `expo` (~54.x) | Core Expo SDK and managed workflow |
+| `react-native` (0.79.x) | Cross-platform native UI framework |
+| `@react-navigation/native` | Navigation container and core |
+| `@react-navigation/bottom-tabs` | Bottom tab navigator |
+| `@react-navigation/native-stack` | Native stack navigator |
+| `expo-linear-gradient` | Gradient backgrounds |
+| `expo-blur` | Native blur for glassmorphism on iOS |
+| `expo-haptics` | Haptic feedback |
+| `@expo/vector-icons` | Ionicons icon set |
+| `react-native-safe-area-context` | Safe area insets |
+| `react-native-screens` | Native screen containers |
+| `typescript` (~5.x) | Type safety |
+
+### Shared Code Strategy
+
+TypeScript type definitions, seed data, constants, and API client logic are shared between the web (`sp-app`) and mobile (`sp-app-mobile`) projects. In the current setup, these files are copied from the web project into the mobile project's `src/lib/` directory. The 15 shared type files are:
+
+```
+user.types.ts         premise.types.ts      consumption.types.ts
+bill.types.ts         transaction.types.ts   appliance.types.ts
+green.types.ts        reward.types.ts        ev.types.ts
+application.types.ts  notification.types.ts  giro.types.ts
+simulator.types.ts    leaderboard.types.ts   index.ts
+```
+
+Additional shared files: `seed-data.ts`, `constants.ts`, `api.ts`.
+
+For production, migrating to a monorepo (Turborepo or Nx) with a shared `packages/types` workspace is recommended to eliminate duplication and keep types in sync automatically.
+
+### Screen Components
+
+| Screen | File Path | Description |
+|--------|-----------|-------------|
+| Home | `src/screens/HomeScreen.tsx` | Dashboard with consumption chart, quick actions, alerts |
+| Bills | `src/screens/BillsScreen.tsx` | Bills list, outstanding amount, transaction timeline |
+| Bill Detail | `src/screens/BillDetailScreen.tsx` | Interactive donut chart, waterfall cards, AI insights |
+| GreenUP | `src/screens/GreenUpScreen.tsx` | RPG gamification: XP bar, rewards, quests, leaderboard |
+| EV Charging | `src/screens/EVChargingScreen.tsx` | Station finder with charger type badges |
+| Profile | `src/screens/ProfileScreen.tsx` | Account info, premises, dark mode settings |
+| Simulator | `src/screens/SimulatorScreen.tsx` | Bill prediction with custom touch-based sliders |
+| Energy Flow | `src/screens/EnergyFlowScreen.tsx` | Animated particle energy visualization |
+| Utilities | `src/screens/UtilitiesScreen.tsx` | Self-service portal with quick actions |
+| Moving | `src/screens/MovingScreen.tsx` | 4-step moving house wizard |
+
+### Custom Components
+
+| Component | File Path | Description |
+|-----------|-----------|-------------|
+| GlassCard | `src/components/GlassCard.tsx` | Glassmorphism card using `expo-blur` (`BlurView`) on iOS for native backdrop blur; falls back to semi-transparent `rgba` backgrounds on Android |
+| GradientBackground | `src/components/GradientBackground.tsx` | Reusable gradient wrapper built on `expo-linear-gradient` for consistent page backgrounds |
+| SPBuddy | `src/components/SPBuddy.tsx` | Floating chatbot button and animated modal chat panel using `Animated.timing` for slide-up/slide-down transitions |
+
+### ThemeContext
+
+Dark mode is managed via a `ThemeContext` React context provider that wraps the entire application. It exposes:
+
+- `isDark` (boolean): Current theme state
+- `toggleDark` (function): Toggles between light and dark mode
+- Light palette: white backgrounds, dark text, teal accents
+- Dark palette: dark gray backgrounds (#1a1a2e, #16213e), light text, teal accents
+
+All screens and components consume `useContext(ThemeContext)` to apply the appropriate colors.
+
+### Navigation Structure
+
+Navigation is managed by React Navigation 7.x with a combination of bottom tabs and native stack:
+
+```
+TabNavigator (Bottom Tabs - 5 tabs)
+  |-- Home Tab        -> HomeScreen
+  |-- Bills Tab       -> BillsScreen
+  |-- GreenUP Tab     -> GreenUpScreen
+  |-- EV Charging Tab -> EVChargingScreen
+  |-- Profile Tab     -> ProfileScreen
+
+Stack Navigator (pushed on top of tabs)
+  |-- BillDetailScreen   (from Bills tab)
+  |-- SimulatorScreen    (from Home tab)
+  |-- EnergyFlowScreen   (from Home tab)
+  |-- UtilitiesScreen    (from Home tab)
+  |-- MovingScreen       (from Utilities screen)
+```
+
+The `TabNavigator.tsx` file defines both the tab navigator and the wrapping native stack navigator. Stack screens slide in from the right with the default native transition.
+
+### API Client
+
+The API base URL is configured in `src/lib/api.ts` and switches based on the build environment:
+
+```
+__DEV__ === true  -> http://localhost:3000    (development)
+__DEV__ === false -> http://sp-app-alb-*.elb.amazonaws.com  (production ALB)
+```
+
+The `__DEV__` flag is automatically set by React Native based on whether the app is running in development mode or as a production build. For production, this should be updated to point to the HTTPS domain once SSL is configured on the ALB.
+
+### Animation Approach
+
+All animations use React Native's built-in `Animated` API (not Reanimated) for maximum compatibility with the Expo managed workflow:
+
+- **Animated.timing**: Fade-ins, slide-ins, progress bars with easing functions
+- **Animated.spring**: Bounce effects on badges and buttons
+- **Animated.stagger**: Sequenced card entry animations
+- **Animated.loop**: Continuous animations (shimmer effects, particle flow)
+
+The Energy Flow screen uses `Animated.loop` with interpolated `translateX` and `translateY` values to animate particles along paths from the power grid to the house and from the house to individual appliances.
+
+### Bar Charts
+
+Consumption bar charts on the Home and Bill Detail screens are implemented using plain `View` components with percentage-based heights rather than an external chart library. This avoids heavy dependencies and gives full control over styling and animation.
+
+### Build Commands
+
+**Development**:
+```bash
+# Start Expo development server (LAN mode for device testing)
+npx expo start --lan
+
+# Open on iOS Simulator
+npx expo start --ios
+
+# Open on Android Emulator
+npx expo start --android
+```
+
+**Production builds** (using Expo Application Services):
+```bash
+# Build for iOS (generates .ipa)
+eas build --platform ios
+
+# Build for Android (generates .apk or .aab)
+eas build --platform android
+
+# Build for both platforms
+eas build --platform all
+```
+
+### Deployment
+
+**Testing**: Use Expo Go for rapid development testing on physical devices. Connect via `exp://[IP]:8081` on the same WiFi network.
+
+**iOS Production**: Build with `eas build --platform ios`, then distribute via TestFlight for beta testing and the App Store for public release. Submit using `eas submit --platform ios`. Requires an Apple Developer account.
+
+**Android Production**: Build with `eas build --platform android`, then distribute via Play Console for internal testing and the Play Store for public release. Submit using `eas submit --platform android`. Requires a Google Play Developer account.
+
+**Over-the-air updates**: Expo supports OTA updates via `eas update`, allowing JavaScript bundle updates to be pushed to users without going through app store review cycles.

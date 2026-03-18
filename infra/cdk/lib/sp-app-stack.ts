@@ -25,13 +25,8 @@ export class SpAppStack extends cdk.Stack {
       ],
     });
 
-    // ========== ECR Repository ==========
-    const ecrRepo = new ecr.Repository(this, 'SpAppEcr', {
-      repositoryName: 'sp-app',
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-      emptyOnDelete: true,
-      lifecycleRules: [{ maxImageCount: 10, description: 'Keep last 10 images' }],
-    });
+    // ========== ECR Repository (import existing) ==========
+    const ecrRepo = ecr.Repository.fromRepositoryName(this, 'SpAppEcr', 'sp-app');
 
     // ========== RDS PostgreSQL ==========
     const dbCredentials = new secretsmanager.Secret(this, 'SpAppDbCredentials', {

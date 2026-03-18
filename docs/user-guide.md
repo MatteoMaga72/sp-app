@@ -558,3 +558,57 @@ A glass-effect card contains the following options:
 - **Communication Preferences**: Manage notification settings
 
 Each item shows an icon, label, optional badge, and a chevron indicating it can be tapped for more options.
+
+---
+
+## Mobile App (iOS & Android)
+
+### Installation
+
+Install the [Expo Go](https://expo.dev/go) app from the Apple App Store (iOS) or Google Play Store (Android). Expo Go is a free app that lets you run the SP App on your physical device during development and testing.
+
+Once Expo Go is installed, connect to the development server by entering the URL `exp://[YOUR_IP]:8081` in Expo Go's address bar. Your phone and the development machine must be on the same WiFi network. Alternatively, scan the QR code displayed in the terminal when the development server starts.
+
+For production distribution, the SP App will be available as a standalone native download from the Apple App Store and Google Play Store via EAS Build and TestFlight (iOS) or Play Console (Android).
+
+### Available Screens
+
+The mobile app delivers the same complete feature set as the web application. All 13 screens are available natively on iOS and Android:
+
+| # | Screen | Description |
+|---|--------|-------------|
+| 1 | Home Dashboard | Consumption charts, quick actions, alerts, promotions |
+| 2 | Bills | Outstanding amounts, transaction timeline, payment options |
+| 3 | Bill Detail | Interactive donut chart, waterfall cards, AI insights |
+| 4 | Bill Simulator | Crystal ball prediction with touch-based sliders |
+| 5 | GreenUP | RPG gamification with rewards, quests, leaderboard |
+| 6 | Green Goals | Sustainability tracking at home, district, national levels |
+| 7 | EV Charging | Station finder with charger types and availability |
+| 8 | Energy Flow | Real-time animated energy visualization |
+| 9 | Utilities Services | Self-service portal with quick actions |
+| 10 | Moving House | 4-step guided wizard |
+| 11 | Profile & Settings | Account info, premises, dark mode toggle |
+| 12 | SP Buddy | AI chatbot (floating button on every screen) |
+| 13 | Navigation | 5-tab bottom bar with stack screens |
+
+### SP Buddy on Mobile
+
+The SP Buddy chatbot is fully available on mobile via a floating action button in the bottom-right corner of every screen. Tapping it opens a modal chat panel that slides up from the bottom with the same five quick action chips, seven topic categories, typing indicator, and conversational behavior as the web version.
+
+### Dark Mode
+
+Dark mode can be toggled from the Profile screen under Settings. Tap the sun/moon toggle to switch between light and dark themes. The preference is applied instantly across all screens and persisted for future sessions.
+
+### Native Features
+
+The mobile app takes advantage of platform-specific capabilities:
+
+- **Haptic feedback**: Tactile response on button presses, slider interactions, and navigation events for a more responsive feel
+- **60fps animations**: Smooth native animations throughout the app using the React Native Animated API, including fade-ins, slide-ins, progress bars, and particle effects
+- **Gesture navigation**: Native stack navigation with swipe-back gestures and platform-appropriate transitions
+- **Push notifications** (future): Receive bill reminders, outage alerts, and green goal nudges directly on your device
+- **Biometric authentication** (future): Face ID and fingerprint login support
+
+### Switching Between Web and Mobile
+
+Your SP App account works across both web and mobile. Sign in with the same credentials on either platform to access the same data, bills, consumption history, GreenUP progress, and preferences. Changes made on one platform are reflected on the other since both connect to the same backend API.

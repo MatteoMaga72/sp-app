@@ -584,3 +584,115 @@ The profile page displays account information, manages premises and family membe
 - If localStorage is unavailable (e.g., incognito mode), default to light mode without errors
 - Long names should truncate with ellipsis
 - The profile page should not flash between themes on initial load
+
+---
+
+## Mobile App Specifications
+
+### Description
+
+The SP App mobile application is a React Native (Expo SDK 54) port of the web application, delivering all 13 screens as native iOS and Android experiences. The mobile app connects to the same backend API and provides feature parity with the web version while leveraging platform-specific capabilities.
+
+### Screen Mapping
+
+All screens from the web application have been ported to React Native:
+
+| # | Screen | Mobile File Path | Notes |
+|---|--------|-----------------|-------|
+| 1 | Home Dashboard | `src/screens/HomeScreen.tsx` | Consumption chart, quick actions, alerts, promotions |
+| 2 | Bills | `src/screens/BillsScreen.tsx` | Outstanding amount, transaction timeline |
+| 3 | Bill Detail | `src/screens/BillDetailScreen.tsx` | Donut chart, waterfall cards, AI insights |
+| 4 | Bill Simulator | `src/screens/SimulatorScreen.tsx` | Crystal ball hero, custom touch-based sliders |
+| 5 | GreenUP | `src/screens/GreenUpScreen.tsx` | RPG gamification with XP bar, quests, leaderboard |
+| 6 | Green Goals | (within HomeScreen) | Sustainability tracking |
+| 7 | EV Charging | `src/screens/EVChargingScreen.tsx` | Station finder with availability |
+| 8 | Energy Flow | `src/screens/EnergyFlowScreen.tsx` | Animated particles flowing along paths |
+| 9 | Utilities Services | `src/screens/UtilitiesScreen.tsx` | Self-service portal |
+| 10 | Moving House | `src/screens/MovingScreen.tsx` | 4-step wizard |
+| 11 | Profile | `src/screens/ProfileScreen.tsx` | Account info, settings, dark mode toggle |
+| 12 | SP Buddy | `src/components/SPBuddy.tsx` | Floating chatbot modal (component) |
+| 13 | Navigation | `src/navigation/TabNavigator.tsx` | Bottom tabs + stack navigator |
+
+### Navigation Structure
+
+The app uses a 5-tab bottom navigation bar as the primary navigation, with additional screens pushed onto a native stack:
+
+**Bottom Tabs (5 tabs)**:
+1. Home -- `HomeScreen`
+2. Bills -- `BillsScreen`
+3. GreenUP -- `GreenUpScreen`
+4. EV Charging -- `EVChargingScreen`
+5. Profile -- `ProfileScreen`
+
+**Stack Screens (pushed on top of tabs)**:
+- `BillDetailScreen` -- navigated from Bills tab
+- `SimulatorScreen` -- navigated from Home tab
+- `EnergyFlowScreen` -- navigated from Home tab
+- `UtilitiesScreen` -- navigated from Home tab
+- `MovingScreen` -- navigated from Utilities screen
+
+### SP Buddy Chatbot
+
+SP Buddy is implemented as a floating action button that appears on every screen. Tapping it opens a modal overlay with the same 5 quick action chips and 9 response patterns as the web version:
+
+1. Billing queries (bill amount, payment, expensive)
+2. Usage queries (electricity, kWh, consumption)
+3. Outage reporting (power cut, blackout)
+4. Account operations (open, close, moving)
+5. GIRO setup (autopay, bank transfer)
+6. Green Goals progress (sustainability, save)
+7. EV Charging nearby (stations, availability)
+8. General greeting
+9. Fallback response (unrecognized queries)
+
+The modal slides up from the bottom with a typing indicator (bouncing dots) and 500-1000ms response delay for natural conversation feel.
+
+### Energy Flow Visualization
+
+The Energy Flow screen displays animated particles flowing from the power grid to the house and from the house to individual appliances. Particles are rendered using the React Native `Animated` API with `Animated.loop` and interpolated `translateX`/`translateY` values to simulate movement along paths. Each appliance has a proportional particle spawn rate based on its kWh consumption. Tapping an appliance highlights it and increases its particle density.
+
+### Bill Simulator
+
+The Simulator screen features custom touch-based sliders built with `PanResponder`. Each slider has a gradient track, floating value bubble, and real-time cost impact indicator (green for savings, red for increases). Moving any slider instantly updates the crystal ball prediction total with smooth animated number transitions.
+
+### GreenUP Gamification
+
+The GreenUP screen implements an RPG-themed gamification system with:
+- A hexagonal shield badge showing the user's current level
+- An XP progress bar with shimmer animation showing current/required XP
+- Three stat cards (day streak, kWh saved, district rank)
+- Tab-based navigation between Rewards, Quests, and Leaderboard sections
+- Four level tiers: Seed (1,000 XP), Seedling (2,500 XP), Sprout (5,000 XP), Bloom (10,000 XP)
+
+### Platform-Specific Features
+
+**Haptic feedback**: Button presses and slider interactions trigger native haptic feedback via `expo-haptics`, providing tactile confirmation that enhances the mobile experience.
+
+**Native scroll behavior**: All lists and scrollable content use native `ScrollView` and `FlatList` components with platform-appropriate bounce, momentum, and overscroll behavior.
+
+**Keyboard avoiding views**: Form screens (Moving House wizard, SP Buddy chat input) use `KeyboardAvoidingView` to ensure inputs remain visible when the on-screen keyboard appears.
+
+**Safe area handling**: All screens respect device safe areas (notch, home indicator, status bar) via `react-native-safe-area-context`.
+
+### Offline Capability (Future)
+
+Planned offline support includes:
+
+- **Cached bills**: Store the most recent 6 months of bill data locally for offline viewing
+- **Cached consumption**: Store the latest consumption readings per premise
+- **Optimistic UI**: Queue actions (e.g., GIRO setup requests) when offline and sync when connectivity returns
+- **Stale data indicators**: Display timestamps showing when data was last refreshed
+
+### Push Notifications (Future)
+
+Planned push notification types:
+
+| Notification Type | Trigger | Content |
+|------------------|---------|---------|
+| Bill reminder | 3 days before due date | "Your $154.08 bill is due on March 20. Tap to pay." |
+| Outage alert | Detected outage in user's district | "Power outage reported in D2 Anson area. Estimated restoration: 2 hours." |
+| Green goal nudge | Weekly if usage is above target | "You're 12% above your electricity target this week. Check tips to get back on track." |
+| GreenUP quest expiring | 1 day before quest deadline | "Your 'Waste-Less Lifestyle' quest expires tomorrow. 3 steps remaining." |
+| Payment confirmation | After successful payment | "Payment of $154.08 received. Thank you!" |
+
+Push notifications will be implemented using Expo Notifications with APNs (iOS) and FCM (Android) as the delivery channels.

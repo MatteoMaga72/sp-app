@@ -478,3 +478,127 @@ Notes:
 - RDS may qualify for AWS Free Tier for the first 12 months
 - Costs assume us-east-1 pricing and minimal traffic
 - No HTTPS/certificate costs included (would add ~$0 with ACM)
+
+---
+
+## 11. Mobile Architecture (React Native)
+
+### Tech Stack
+
+| Technology | Version | Purpose |
+|-----------|---------|---------|
+| Expo SDK | 54 | Managed React Native workflow, build tooling, OTA updates |
+| React Native | 0.79 | Cross-platform native UI framework |
+| TypeScript | 5.x | Type safety across the entire codebase |
+| React Navigation | 7.x | Native navigation (bottom tabs + native stack) |
+
+### Key Libraries
+
+- **@react-navigation/bottom-tabs**: Bottom tab navigator for the 5-tab main navigation
+- **@react-navigation/native-stack**: Native stack navigator for push/pop screen transitions
+- **expo-linear-gradient**: Native gradient backgrounds matching the web glassmorphism design
+- **expo-blur**: Native blur effects for glassmorphism cards on iOS
+- **expo-haptics**: Haptic feedback on button presses and interactions
+- **@expo/vector-icons**: Icon set (Ionicons) for tab bar and UI elements
+- **react-native-safe-area-context**: Safe area insets for notched devices
+- **react-native-screens**: Native screen containers for navigation performance
+
+### Shared Code with Web App
+
+The mobile app shares 15 TypeScript type definition files with the web project, ensuring type consistency across platforms:
+
+```
+src/lib/types/
+  appliance.types.ts    bill.types.ts         consumption.types.ts
+  ev.types.ts           giro.types.ts         green.types.ts
+  application.types.ts  leaderboard.types.ts  notification.types.ts
+  premise.types.ts      reward.types.ts       simulator.types.ts
+  transaction.types.ts  user.types.ts         index.ts
+```
+
+Additionally shared files include `seed-data.ts` (demo/offline data), `constants.ts` (app-wide constants), and `api.ts` (API client). In the current setup, these files are copied from the web project. A monorepo migration (e.g., Turborepo or Nx) is recommended for production to keep shared code in a single source of truth.
+
+### Architecture Diagram
+
+```
+                    +-------------------+
+                    |    Internet       |
+                    +--------+----------+
+                             |
+                    +--------+----------+
+                    |       ALB         |
+                    |    (Port 80)      |
+                    +--------+----------+
+                             |
+                    +--------+----------+
+                    | ECS Fargate       |
+                    | Next.js API       |
+                    | Port 3000         |
+                    +--------+----------+
+                             |
+              +--------------+--------------+
+              |                             |
+    +---------+----------+     +-----------+---------+
+    | Web App (Next.js)  |     | Mobile App (Expo)   |
+    | Browser @ ALB URL  |     | iOS & Android       |
+    | SSR + Client       |     | React Native        |
+    +--------------------+     +---------------------+
+              |                             |
+              +----------+--+---------------+
+                         |
+                +--------+----------+
+                | RDS PostgreSQL 16 |
+                +-------------------+
+```
+
+Both the web frontend and the mobile app call the same REST API endpoints hosted on ECS Fargate. The web app renders server-side and client-side via Next.js, while the mobile app is a purely client-side React Native application making API calls over HTTP.
+
+### Dark Mode
+
+Dark mode is managed via a `ThemeContext` provider that wraps the entire app. The context exposes an `isDark` boolean and a `toggleDark` function. All screens and components consume the theme context to apply the appropriate color palette (light or dark). The toggle is accessible from the Profile screen's settings section.
+
+### Glassmorphism
+
+The `GlassCard` component provides glassmorphism styling across the app. On iOS, it uses `expo-blur` (`BlurView`) for native backdrop blur. On Android, where `BlurView` is less performant, it falls back to semi-transparent `rgba` backgrounds to achieve a similar visual effect.
+
+### API Client
+
+The mobile API client (`src/lib/api.ts`) provides `apiGet` and `apiPost` helper functions that wrap `fetch` with the standard response envelope handling. The base URL switches based on environment:
+
+- **Development**: `http://localhost:3000` (via Expo Go on the same network)
+- **Production**: The ALB URL (`http://sp-app-alb-*.us-east-1.elb.amazonaws.com`)
+
+### Mobile Project Structure
+
+```
+sp-app-mobile/
+  App.tsx                    -- Root component with NavigationContainer
+  index.ts                   -- Entry point (registerRootComponent)
+  package.json               -- Dependencies and scripts
+  tsconfig.json              -- TypeScript configuration
+  app.json                   -- Expo app configuration
+  src/
+    navigation/
+      TabNavigator.tsx       -- Bottom tab navigator (5 tabs) + stack screens
+    screens/
+      HomeScreen.tsx         -- Dashboard with consumption chart
+      BillsScreen.tsx        -- Bills list and transactions
+      BillDetailScreen.tsx   -- Bill breakdown with donut chart
+      GreenUpScreen.tsx      -- Gamification system
+      EVChargingScreen.tsx   -- Station finder
+      ProfileScreen.tsx      -- Account and settings
+      SimulatorScreen.tsx    -- Bill prediction simulator
+      EnergyFlowScreen.tsx   -- Energy visualization
+      UtilitiesScreen.tsx    -- Services portal
+      MovingScreen.tsx       -- Moving house wizard
+    components/
+      GlassCard.tsx          -- Glassmorphism card (expo-blur on iOS, rgba fallback on Android)
+      SPBuddy.tsx            -- AI chatbot floating modal
+      GradientBackground.tsx -- Reusable gradient wrapper (expo-linear-gradient)
+    lib/
+      api.ts                 -- API client (apiGet, apiPost)
+      theme.ts               -- Light/dark color palettes and spacing constants
+      types/                 -- 15 shared TypeScript type files
+      db/                    -- Seed data for offline/demo mode
+      utils/                 -- Utility functions
+```
