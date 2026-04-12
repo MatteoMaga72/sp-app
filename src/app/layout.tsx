@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import BottomNav from "@/components/BottomNav";
 import SPBuddy from "@/components/SPBuddy";
 
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
@@ -22,8 +21,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.variable} antialiased bg-gray-50 dark:bg-gray-950`}>
-        <main className="pb-20 min-h-screen max-w-[430px] mx-auto bg-white dark:bg-gray-900">
+      <body className={`${inter.variable} font-sans antialiased bg-gray-50 dark:bg-gray-950`}>
+        <main className="pb-20 min-h-screen max-w-[430px] mx-auto bg-background">
           {children}
         </main>
         <SPBuddy />

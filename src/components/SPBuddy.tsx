@@ -67,7 +67,7 @@ export default function SPBuddy() {
     setInput("");
     setShowChips(false);
     setIsTyping(true);
-    const delay = 500 + Math.random() * 500;
+    const delay = 800;
     setTimeout(() => {
       const botMsg: Message = { id: nextId.current++, text: getBotResponse(msg), sender: "bot" };
       setIsTyping(false);
@@ -111,7 +111,7 @@ export default function SPBuddy() {
           </div>
           <div className="flex-1">
             <p className="font-semibold text-sm leading-tight">SP Buddy</p>
-            <p className="text-[10px] opacity-80">Your utilities assistant</p>
+            <p className="text-xs opacity-80">Your utilities assistant</p>
           </div>
           <button onClick={handleClose} className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-white/20 active:bg-white/30" aria-label="Close chat">
             <X size={20} />

@@ -119,7 +119,7 @@ export default function UtilitiesPage() {
         <div className="glass-strong rounded-3xl p-4">
           <div className="flex items-center gap-2 mb-4">
             <h3 className="text-sm font-bold text-sp-dark">Your Applications</h3>
-            <span className="bg-sp-teal text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">1</span>
+            <span className="bg-sp-teal text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">1</span>
           </div>
           <div className="border border-gray-100 dark:border-gray-700 rounded-2xl p-4">
             <div className="flex items-center gap-2 mb-1">
@@ -134,7 +134,7 @@ export default function UtilitiesPage() {
                 return (
                   <div key={step} className="flex items-center flex-1 last:flex-none">
                     <div className="flex flex-col items-center">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${done ? 'bg-sp-green text-white' : ''} ${current ? 'bg-sp-teal text-white animate-pulse' : ''} ${!done && !current ? 'bg-gray-200 dark:bg-gray-600 text-gray-400' : ''}`}>
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${done ? 'bg-sp-green text-white' : ''} ${current ? 'bg-sp-teal text-white animate-pulse' : ''} ${!done && !current ? 'bg-gray-200 dark:bg-gray-600 text-gray-400' : ''}`}>
                         {done ? <Check size={12} /> : i + 1}
                       </div>
                       <span className={`text-[9px] mt-1 ${current ? 'text-sp-teal font-semibold' : 'text-gray-400'}`}>{step}</span>
@@ -147,7 +147,7 @@ export default function UtilitiesPage() {
             <div className="w-full h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden mb-2">
               <div className="h-full bg-sp-teal rounded-full transition-all duration-1000" style={{ width: `${progress}%` }} />
             </div>
-            <div className="flex justify-between text-[10px] text-gray-400">
+            <div className="flex justify-between text-xs text-gray-400">
               <span>Submitted 15 Mar 2026</span>
               <span>Est. 20 Mar 2026</span>
             </div>

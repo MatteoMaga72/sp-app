@@ -30,13 +30,11 @@ const settingsItems = [
 ];
 
 export default function ProfilePage() {
-  const [dark, setDark] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    setDark(document.documentElement.classList.contains('dark'));
-  }, []);
+  const [dark, setDark] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return document.documentElement.classList.contains('dark');
+  });
+  const [mounted] = useState(() => typeof window !== "undefined");
 
   const toggleDark = () => {
     const next = !dark;
@@ -86,7 +84,7 @@ export default function ProfilePage() {
             </div>
             <div className="flex-1">
               <h4 className="text-sm font-bold text-sp-dark">18 Everton Rd</h4>
-              <span className="inline-block mt-1 text-[10px] font-semibold text-sp-orange bg-sp-orange/10 px-2 py-0.5 rounded-full uppercase">Owner</span>
+              <span className="inline-block mt-1 text-xs font-semibold text-sp-orange bg-sp-orange/10 px-2 py-0.5 rounded-full uppercase">Owner</span>
             </div>
           </div>
 
@@ -98,7 +96,7 @@ export default function ProfilePage() {
               <div className="flex -space-x-2">
                 {members.map((member, i) => (
                   <div key={i} className={`w-8 h-8 rounded-full ${member.color} flex items-center justify-center border-2 border-white dark:border-gray-800`}>
-                    <span className="text-[10px] font-medium text-gray-600 dark:text-gray-300">{member.initials}</span>
+                    <span className="text-xs font-medium text-gray-600 dark:text-gray-300">{member.initials}</span>
                   </div>
                 ))}
               </div>
@@ -106,7 +104,7 @@ export default function ProfilePage() {
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1 bg-sp-green/10 px-2 py-1 rounded-full">
                 <span className="text-xs font-bold text-sp-green">+50</span>
-                <span className="text-[10px] text-sp-green">pts</span>
+                <span className="text-xs text-sp-green">pts</span>
               </div>
               <button className="w-8 h-8 rounded-full bg-sp-teal-light flex items-center justify-center">
                 <Plus size={16} className="text-sp-teal" />
@@ -148,7 +146,7 @@ export default function ProfilePage() {
               <item.icon size={20} className="text-gray-500 dark:text-gray-400 shrink-0" />
               <span className="flex-1 text-sm text-sp-dark text-left">{item.label}</span>
               {item.badge && (
-                <span className={`${item.badgeColor} text-white text-[10px] font-bold px-2 py-0.5 rounded-full`}>{item.badge}</span>
+                <span className={`${item.badgeColor} text-white text-xs font-bold px-2 py-0.5 rounded-full`}>{item.badge}</span>
               )}
               <ChevronRight size={18} className="text-gray-400 shrink-0" />
             </button>

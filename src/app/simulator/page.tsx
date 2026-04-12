@@ -197,11 +197,7 @@ function useAnimatedNumber(target: number, duration = 400) {
 
 export default function SimulatorPage() {
   const [values, setValues] = useState<SliderValues>({ ...DEFAULTS });
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const [mounted] = useState(() => typeof window !== "undefined");
 
   const currentBill = 154.08;
   const predicted = calculate(values).total;

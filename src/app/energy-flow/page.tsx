@@ -603,7 +603,7 @@ export default function EnergyFlowPage() {
                 </p>
                 <div className="flex items-center justify-between mt-1.5">
                   <span
-                    className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                    className="text-xs font-bold px-1.5 py-0.5 rounded-full"
                     style={{
                       backgroundColor: a.color + "22",
                       color: a.color,
@@ -611,7 +611,7 @@ export default function EnergyFlowPage() {
                   >
                     {pct}%
                   </span>
-                  <span className="text-[10px] text-gray-400">${costHr}/hr</span>
+                  <span className="text-xs text-gray-400">${costHr}/hr</span>
                 </div>
               </button>
             );
